@@ -6850,7 +6850,14 @@ redisTestProc *getTestProcByName(const char *name) {
 }
 #endif
 
+/**
+ * redis服务器的main方法 程序入口
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char **argv) {
+    printf("hello redis! I'm zhushunshan\n");
     struct timeval tv;
     int j;
     char config_from_stdin = 0;
