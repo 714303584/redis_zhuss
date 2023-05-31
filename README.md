@@ -11,6 +11,8 @@ JAVA从零开始学习Redis源码?
 第二步：redis代码结构学习
 --------------
         代码结构学习
-        src        
+        src       
+            server.c  服务端启动文件 -- main方法所在位置
+            redis-cli.c 原生客户端启动文件 -- 
 进行中
 

@@ -99,10 +99,16 @@ const char *replstateToString(int replstate);
 void nolocks_localtime(struct tm *tmp, time_t t, time_t tz, int dst);
 
 /* Low level logging. To use only for very big messages, otherwise
- * serverLog() is to prefer. */
+ * serverLog() is to prefer.
+ * 低等级日志。 仅使用在非常大的消息，否则首选serverLog()函数
+ * level 日志等级
+ * msg 日志消息
+ * */
 void serverLogRaw(int level, const char *msg) {
+    //系统log等级集合
     const int syslogLevelMap[] = { LOG_DEBUG, LOG_INFO, LOG_NOTICE, LOG_WARNING };
     const char *c = ".-*#";
+    //文件
     FILE *fp;
     char buf[64];
     int rawmode = (level & LL_RAW);
@@ -111,12 +117,17 @@ void serverLogRaw(int level, const char *msg) {
     level &= 0xff; /* clear flags */
     if (level < server.verbosity) return;
 
+    //获取log文件
+    printf("ifreeshare-log:%s",server.logfile);
+    //a 代表以追加模式进行打开
     fp = log_to_stdout ? stdout : fopen(server.logfile,"a");
     if (!fp) return;
 
+    //行写模式
     if (rawmode) {
         fprintf(fp,"%s",msg);
     } else {
+        //非行写模式
         int off;
         struct timeval tv;
         int role_char;
@@ -145,7 +156,9 @@ void serverLogRaw(int level, const char *msg) {
 
 /* Like serverLogRaw() but with printf-alike support. This is the function that
  * is used across the code. The raw version is only used in order to dump
- * the INFO output on crash. */
+ * the INFO output on crash.
+ * log写入
+ * */
 void _serverLog(int level, const char *fmt, ...) {
     va_list ap;
     char msg[LOG_MAX_LEN];
@@ -162,7 +175,9 @@ void _serverLog(int level, const char *fmt, ...) {
  *
  * We actually use this only for signals that are not fatal from the point
  * of view of Redis. Signals that are going to kill the server anyway and
- * where we need printf-alike features are served by serverLog(). */
+ * where we need printf-alike features are served by serverLog().
+ *  进行log的格式化
+ * */
 void serverLogFromHandler(int level, const char *msg) {
     int fd;
     int log_to_stdout = server.logfile[0] == '\0';
@@ -214,6 +229,8 @@ void exitFromChild(int retcode) {
 }
 
 /*====================== Hash table type implementation  ==================== */
+/*====================== Hash table 类型实现   ==================== */
+
 
 /* This is a hash table type that uses the SDS dynamic strings library as
  * keys and redis objects as values (objects can hold SDS strings,
@@ -6858,6 +6875,13 @@ redisTestProc *getTestProcByName(const char *name) {
  */
 int main(int argc, char **argv) {
     printf("hello redis! I'm zhushunshan\n");
+    printf("ifreeshare-argc：%d \n",argc);
+    int argv_count = sizeof(argv);
+    printf("ifreeshare-argv-size:%d \n", argv_count);
+    for(int i = 0; i < argv_count; i++){
+        printf("argv[%d]:%s \n",i,argv[i]);
+    }
+
     struct timeval tv;
     int j;
     char config_from_stdin = 0;
@@ -6902,7 +6926,8 @@ int main(int argc, char **argv) {
     }
 #endif
 
-    /* We need to initialize our libraries, and the server configuration. */
+    /* We need to initialize our libraries, and the server configuration.
+     * 我们需要去初始化我们的类库和服务配置*/
 #ifdef INIT_SETPROCTITLE_REPLACEMENT
     spt_init(argc, argv);
 #endif
@@ -6955,6 +6980,7 @@ int main(int argc, char **argv) {
     /* Check if we need to start in redis-check-rdb/aof mode. We just execute
      * the program main. However the program is part of the Redis executable
      * so that we can easily execute an RDB check on loading errors. */
+    printf("exec_name:%s\n",exec_name);
     if (strstr(exec_name,"redis-check-rdb") != NULL)
         redis_check_rdb_main(argc,argv,NULL);
     else if (strstr(exec_name,"redis-check-aof") != NULL)
