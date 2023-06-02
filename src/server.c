@@ -1915,10 +1915,15 @@ void freeServerClientMemUsageBuckets() {
     server.client_mem_usage_buckets = NULL;
 }
 
+/**
+ * 初始化服务配置
+ */
 void initServerConfig(void) {
     int j;
+//    printf("CONFIG_DEFAULT_BINDADDR:%s\n",CONFIG_DEFAULT_BINDADDR);
+    //获取绑定地址
     char *default_bindaddr[CONFIG_DEFAULT_BINDADDR_COUNT] = CONFIG_DEFAULT_BINDADDR;
-
+    //初始化配置值
     initConfigValues();
     updateCachedTime(1);
     getRandomHexChars(server.runid,CONFIG_RUN_ID_SIZE);
