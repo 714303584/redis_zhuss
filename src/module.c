@@ -11424,8 +11424,11 @@ void modulePipeReadable(aeEventLoop *el, int fd, void *privdata, int mask) {
     UNUSED(privdata);
 
     char buf[128];
+    //循环进行读取
     while (read(fd, buf, sizeof(buf)) == sizeof(buf));
 
+
+    printf("read str: %s\n",buf);
     /* Handle event loop events if pipe was written from event loop API */
     eventLoopHandleOneShotEvents();
 }

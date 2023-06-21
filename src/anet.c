@@ -585,6 +585,7 @@ int anetTcpAccept(char *err, int serversock, char *ip, size_t ip_len, int *port)
         if (ip) inet_ntop(AF_INET6,(void*)&(s->sin6_addr),ip,ip_len);
         if (port) *port = ntohs(s->sin6_port);
     }
+    printf("新客户端链接处理：%d\n",fd);
     return fd;
 }
 
