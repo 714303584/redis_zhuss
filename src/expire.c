@@ -52,9 +52,11 @@
  * The parameter 'now' is the current time in milliseconds as is passed
  * to the function to avoid too many gettimeofday() syscalls. */
 int activeExpireCycleTryExpire(redisDb *db, dictEntry *de, long long now) {
+    printf("超时函数：activeExpireCycleTryExpire：%s\n",de->key);
     long long t = dictGetSignedIntegerVal(de);
     if (now > t) {
         sds key = dictGetKey(de);
+        printf("超时了一个key：%s\n",key);
         robj *keyobj = createStringObject(key,sdslen(key));
         deleteExpiredKeyAndPropagate(db,keyobj);
         decrRefCount(keyobj);

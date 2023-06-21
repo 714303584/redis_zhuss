@@ -406,7 +406,17 @@ int anetUnixGenericConnect(char *err, const char *path, int flags)
     }
     return s;
 }
-
+/**
+ * 进行监听和绑定
+ * 使用bind函数进行绑定
+ * 使用listen函数进行监听
+ * @param err
+ * @param s
+ * @param sa
+ * @param len
+ * @param backlog
+ * @return
+ */
 static int anetListen(char *err, int s, struct sockaddr *sa, socklen_t len, int backlog) {
     if (bind(s,sa,len) == -1) {
         anetSetError(err, "bind: %s", strerror(errno));
@@ -431,6 +441,15 @@ static int anetV6Only(char *err, int s) {
     return ANET_OK;
 }
 
+/**
+ * 实际上进行IPV4端口绑定的函数
+ * @param err
+ * @param port
+ * @param bindaddr
+ * @param af
+ * @param backlog
+ * @return
+ */
 static int _anetTcpServer(char *err, int port, char *bindaddr, int af, int backlog)
 {
     int s = -1, rv;
@@ -452,11 +471,15 @@ static int _anetTcpServer(char *err, int port, char *bindaddr, int af, int backl
         return ANET_ERR;
     }
     for (p = servinfo; p != NULL; p = p->ai_next) {
+        //进行socket绑定
         if ((s = socket(p->ai_family,p->ai_socktype,p->ai_protocol)) == -1)
             continue;
 
+        //判断IPv6 并且仅仅支持IPv6 跳转的error
         if (af == AF_INET6 && anetV6Only(err,s) == ANET_ERR) goto error;
+        //绑定错误
         if (anetSetReuseAddr(err,s) == ANET_ERR) goto error;
+        //
         if (anetListen(err,s,p->ai_addr,p->ai_addrlen,backlog) == ANET_ERR) s = ANET_ERR;
         goto end;
     }
@@ -473,6 +496,14 @@ end:
     return s;
 }
 
+/**
+ * 进行IPV4的TCP端口绑定
+ * @param err
+ * @param port
+ * @param bindaddr
+ * @param backlog
+ * @return
+ */
 int anetTcpServer(char *err, int port, char *bindaddr, int backlog)
 {
     return _anetTcpServer(err, port, bindaddr, AF_INET, backlog);

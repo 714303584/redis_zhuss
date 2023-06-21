@@ -104,6 +104,8 @@ static void _dictReset(dict *d, int htidx)
 /* Create a new hash table */
 dict *dictCreate(dictType *type)
 {
+    //此函数创建一个Hash表
+    printf("创建一个HashTable\n");
     dict *d = zmalloc(sizeof(*d));
 
     _dictInit(d,type);

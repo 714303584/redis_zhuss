@@ -2343,6 +2343,8 @@ int createSocketAcceptHandler(socketFds *sfd, aeFileProc *accept_handler) {
 /* Initialize a set of file descriptors to listen to the specified 'port'
  * binding the addresses specified in the Redis server configuration.
  *
+ * 初始化服务器端口
+ *
  * The listening file descriptors are stored in the integer array 'fds'
  * and their number is set in '*count'.
  *
@@ -2360,20 +2362,27 @@ int createSocketAcceptHandler(socketFds *sfd, aeFileProc *accept_handler) {
  * one of the IPv4 or IPv6 protocols. */
 int listenToPort(int port, socketFds *sfd) {
     int j;
+    //获取绑定地址
     char **bindaddr = server.bindaddr;
 
     /* If we have no bind address, we don't listen on a TCP socket */
+    /* 如果没有绑定地址，我们不监听TCP端口 */
     if (server.bindaddr_count == 0) return C_OK;
 
+    //进行TCP绑定
+    //绑定地址数目大于0
     for (j = 0; j < server.bindaddr_count; j++) {
         char* addr = bindaddr[j];
         int optional = *addr == '-';
         if (optional) addr++;
+        //判定绑定地址是否是IPV6
         if (strchr(addr,':')) {
             /* Bind IPv6 address. */
+            //绑定ipv6地址
             sfd->fd[sfd->count] = anetTcp6Server(server.neterr,port,addr,server.tcp_backlog);
         } else {
             /* Bind IPv4 address. */
+            //绑定IPV4地址
             sfd->fd[sfd->count] = anetTcpServer(server.neterr,port,addr,server.tcp_backlog);
         }
         if (sfd->fd[sfd->count] == ANET_ERR) {
@@ -2467,6 +2476,9 @@ void makeThreadKillable(void) {
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 }
 
+/**
+ * 服务初始化函数
+ */
 void initServer(void) {
     int j;
 
@@ -2475,12 +2487,15 @@ void initServer(void) {
     setupSignalHandlers();
     makeThreadKillable();
 
+    //是否启动log
     if (server.syslog_enabled) {
+        //打开log todo
         openlog(server.syslog_ident, LOG_PID | LOG_NDELAY | LOG_NOWAIT,
             server.syslog_facility);
     }
 
     /* Initialization after setting defaults from the config system. */
+    /* 通过系统配置初始化设置 */
     server.aof_state = server.aof_enabled ? AOF_ON : AOF_OFF;
     server.hz = server.config_hz;
     server.pid = getpid();
@@ -2538,15 +2553,18 @@ void initServer(void) {
             strerror(errno));
         exit(1);
     }
+    //
     server.db = zmalloc(sizeof(redisDb)*server.dbnum);
 
     /* Open the TCP listening socket for the user commands. */
+    /* 为用户指令开启TCP监听端口 */
     if (server.port != 0 &&
         listenToPort(server.port,&server.ipfd) == C_ERR) {
         /* Note: the following log text is matched by the test suite. */
         serverLog(LL_WARNING, "Failed listening on port %u (TCP), aborting.", server.port);
         exit(1);
     }
+    //这里是tls端口开启
     if (server.tls_port != 0 &&
         listenToPort(server.tls_port,&server.tlsfd) == C_ERR) {
         /* Note: the following log text is matched by the test suite. */
@@ -2555,6 +2573,7 @@ void initServer(void) {
     }
 
     /* Open the listening Unix domain socket. */
+    /* unix 监听*/
     if (server.unixsocket != NULL) {
         unlink(server.unixsocket); /* don't care if this fails */
         server.sofd = anetUnixServer(server.neterr,server.unixsocket,
@@ -2574,17 +2593,29 @@ void initServer(void) {
     }
 
     /* Create the Redis databases, and initialize other internal state. */
+    /* 创建redis的数据库并且初始化 内部状态*/
     for (j = 0; j < server.dbnum; j++) {
+        printf("创建一个数据库:%d \n",j);
         server.db[j].dict = dictCreate(&dbDictType);
+        printf("对应的创建过期HashTable:%d \n",j);
         server.db[j].expires = dictCreate(&dbExpiresDictType);
+        //初始化状态
         server.db[j].expires_cursor = 0;
+        //初始化blocking键
+        printf("对应的创建（blocking_keys）HashTable:%d \n",j);
         server.db[j].blocking_keys = dictCreate(&keylistDictType);
+        printf("对应的创建（ready_keys）HashTable:%d \n",j);
         server.db[j].ready_keys = dictCreate(&objectKeyPointerValueDictType);
+        printf("对应的创建（watched_keys）HashTable:%d \n",j);
         server.db[j].watched_keys = dictCreate(&keylistDictType);
+        //初始化库Id
         server.db[j].id = j;
+        //ttl设置
         server.db[j].avg_ttl = 0;
         server.db[j].defrag_later = listCreate();
+
         server.db[j].slots_to_keys = NULL; /* Set by clusterInit later on if necessary. */
+        //列表释放函数设置 TODO
         listSetFreeMethod(server.db[j].defrag_later,(void (*)(void*))sdsfree);
     }
     evictionPoolAlloc(); /* Initialize the LRU keys pool. */
