@@ -1283,6 +1283,9 @@ void clientAcceptHandler(connection *conn) {
                           c);
 }
 
+/**
+ * 响应公共处理者
+ */
 #define MAX_ACCEPTS_PER_CALL 1000
 static void acceptCommonHandler(connection *conn, int flags, char *ip) {
     client *c;
@@ -2624,6 +2627,9 @@ int processInputBuffer(client *c) {
 }
 
 void readQueryFromClient(connection *conn) {
+
+    printf("从连接读取数据-- conn：%d",conn->fd);
+    //获取连接私有数据 -- client（客户端）信息
     client *c = connGetPrivateData(conn);
     int nread, big_arg = 0;
     size_t qblen, readlen;
@@ -2657,7 +2663,7 @@ void readQueryFromClient(connection *conn) {
         if (c->flags & CLIENT_MASTER && readlen < PROTO_IOBUF_LEN)
             readlen = PROTO_IOBUF_LEN;
     }
-
+    //获取长度
     qblen = sdslen(c->querybuf);
     if (!(c->flags & CLIENT_MASTER) && // master client's querybuf can grow greedy.
         (big_arg || sdsalloc(c->querybuf) < PROTO_IOBUF_LEN)) {
@@ -2673,6 +2679,8 @@ void readQueryFromClient(connection *conn) {
         /* Read as much as possible from the socket to save read(2) system calls. */
         readlen = sdsavail(c->querybuf);
     }
+    //进行数据读取操作
+    //数据格式$
     nread = connRead(c->conn, c->querybuf+qblen, readlen);
     if (nread == -1) {
         if (connGetState(conn) == CONN_STATE_CONNECTED) {

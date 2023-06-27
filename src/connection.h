@@ -166,6 +166,7 @@ static inline int connWritev(connection *conn, const struct iovec *iov, int iovc
  */
 static inline int connRead(connection *conn, void *buf, size_t buf_len) {
     int ret = conn->type->read(conn, buf, buf_len);
+    printf("从客户端读取消息 -- conn：%d,buffer:%s",conn->fd,buf);
     return ret;
 }
 
