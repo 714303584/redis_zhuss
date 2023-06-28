@@ -3124,11 +3124,13 @@ struct redisCommand *lookupCommandBySdsLogic(dict *commands, sds s) {
     }
 
     struct redisCommand *cmd = lookupCommandLogic(commands,argv,argc,1);
+    printf("获取到的cmdName:%s\n",cmd->fullname);
     sdsfreesplitres(strings,argc);
     return cmd;
 }
 
 struct redisCommand *lookupCommandBySds(sds s) {
+    printf("根据字符串获取指令\n");
     return lookupCommandBySdsLogic(server.commands,s);
 }
 

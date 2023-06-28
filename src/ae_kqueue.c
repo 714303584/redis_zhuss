@@ -99,15 +99,28 @@ static void aeApiFree(aeEventLoop *eventLoop) {
     zfree(state);
 }
 
+/**
+ * 向事件循环放入一个事件
+ * @param eventLoop
+ * @param fd
+ * @param mask
+ * @return
+ */
 static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
+    //获取状态
     aeApiState *state = eventLoop->apidata;
+    //使用kqueue
     struct kevent ke;
 
     if (mask & AE_READABLE) {
+        //注册一个读取事件
+        printf("注册读事件到kqueue -- fd：%d",fd);
         EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
         if (kevent(state->kqfd, &ke, 1, NULL, 0, NULL) == -1) return -1;
     }
     if (mask & AE_WRITABLE) {
+        //注册一个写事件
+        printf("注册事件到Kqueue -- fd:%d",fd);
         EV_SET(&ke, fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
         if (kevent(state->kqfd, &ke, 1, NULL, 0, NULL) == -1) return -1;
     }
@@ -128,7 +141,14 @@ static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int mask) {
     }
 }
 
+/**
+ * 处理事件
+ * @param eventLoop
+ * @param tvp
+ * @return
+ */
 static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
+//    printf("aeApiPoll开始执行\n");
     aeApiState *state = eventLoop->apidata;
     int retval, numevents = 0;
 
@@ -160,6 +180,7 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
 
             if (e->filter == EVFILT_READ) mask = AE_READABLE;
             else if (e->filter == EVFILT_WRITE) mask = AE_WRITABLE;
+            //
             addEventMask(state->eventsMask, fd, mask);
         }
 
@@ -181,6 +202,8 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     } else if (retval == -1 && errno != EINTR) {
         panic("aeApiPoll: kevent, %s", strerror(errno));
     }
+
+//    printf("aeApiPoll使用\n");
 
     return numevents;
 }

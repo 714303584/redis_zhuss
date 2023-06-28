@@ -735,7 +735,12 @@ void randomkeyCommand(client *c) {
     decrRefCount(key);
 }
 
+/**
+ * keys命令处理
+ * @param c
+ */
 void keysCommand(client *c) {
+    printf("处理keys命令\n");
     dictIterator *di;
     dictEntry *de;
     sds pattern = c->argv[1]->ptr;

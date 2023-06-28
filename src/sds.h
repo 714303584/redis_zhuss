@@ -34,12 +34,16 @@
 #define __SDS_H
 
 #define SDS_MAX_PREALLOC (1024*1024)
+
+//
 extern const char *SDS_NOINIT;
 
 #include <sys/types.h>
 #include <stdarg.h>
 #include <stdint.h>
 
+//sds 本身就是char类型
+//将char类型 定义为sds
 typedef char *sds;
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
@@ -48,6 +52,7 @@ struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
 };
+
 struct __attribute__ ((__packed__)) sdshdr8 {
     uint8_t len; /* used */
     uint8_t alloc; /* excluding the header and null terminator */

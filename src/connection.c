@@ -248,6 +248,7 @@ static int connSocketSetWriteHandler(connection *conn, ConnectionCallbackFunc fu
 }
 
 /* Register a read handler, to be called when the connection is readable.
+ * 注册一个读处理器，当连接准备进行读取
  * If NULL, the existing handler is removed.
  */
 static int connSocketSetReadHandler(connection *conn, ConnectionCallbackFunc func) {
@@ -256,9 +257,15 @@ static int connSocketSetReadHandler(connection *conn, ConnectionCallbackFunc fun
     conn->read_handler = func;
     if (!conn->read_handler)
         aeDeleteFileEvent(server.el,conn->fd,AE_READABLE);
-    else
+    else{
+        //创建一个文件事件
+        printf("创建一个文件事件\n");
         if (aeCreateFileEvent(server.el,conn->fd,
-                    AE_READABLE,conn->type->ae_handler,conn) == AE_ERR) return C_ERR;
+                              AE_READABLE,conn->type->ae_handler,conn) == AE_ERR) {
+            return C_ERR;
+        }
+    }
+
     return C_OK;
 }
 
@@ -306,7 +313,9 @@ static void connSocketEventHandler(struct aeEventLoop *el, int fd, void *clientD
     int call_read = (mask & AE_READABLE) && conn->read_handler;
 
     /* Handle normal I/O flows */
+    /* 处理正常的IO流 */
     if (!invert && call_read) {
+        printf("callHandler处理正常I/O flows\n");
         if (!callHandler(conn, conn->read_handler)) return;
     }
     /* Fire the writable event. */
