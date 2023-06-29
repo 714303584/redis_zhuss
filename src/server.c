@@ -1575,6 +1575,8 @@ extern int ProcessingEventsWhileBlocked;
  * The most important is freeClientsInAsyncFreeQueue but we also
  * call some other low-risk functions. */
 void beforeSleep(struct aeEventLoop *eventLoop) {
+    //执行
+//    printf("休眠之前进行执行（beforeSleep）\n");
     UNUSED(eventLoop);
 
     size_t zmalloc_used = zmalloc_used_memory();
@@ -1599,9 +1601,11 @@ void beforeSleep(struct aeEventLoop *eventLoop) {
     }
 
     /* Handle precise timeouts of blocked clients. */
+    //处理超时阻塞的客户端
     handleBlockedClientsTimeout();
 
     /* We should handle pending reads clients ASAP after event loop. */
+    //处理
     handleClientsWithPendingReadsUsingThreads();
 
     /* Handle TLS pending data. (must be done before flushAppendOnlyFile) */
@@ -2710,6 +2714,9 @@ void initServer(void) {
 
     /* Register before and after sleep handlers (note this needs to be done
      * before loading persistence since it is used by processEventsWhileBlocked. */
+    /*
+     * 注册休眠之前和之后的处理者
+     */
     aeSetBeforeSleepProc(server.el,beforeSleep);
     aeSetAfterSleepProc(server.el,afterSleep);
 
@@ -3102,6 +3109,7 @@ struct redisCommand *lookupCommandLogic(dict *commands, robj **argv, int argc, i
 }
 
 struct redisCommand *lookupCommand(robj **argv, int argc) {
+    printf(" 处理命令 lookupCommand() \n");
     return lookupCommandLogic(server.commands,argv,argc,0);
 }
 
@@ -3734,6 +3742,8 @@ uint64_t getCommandFlags(client *c) {
  * other operations can be performed by the caller. Otherwise
  * if C_ERR is returned the client was destroyed (i.e. after QUIT). */
 int processCommand(client *c) {
+    //处理指令的方法
+    printf("处理命令方法（processCommand（client *c））\n");
     if (!scriptIsTimedout()) {
         /* Both EXEC and scripts call call() directly so there should be
          * no way in_exec or scriptIsRunning() is 1.
@@ -3763,9 +3773,13 @@ int processCommand(client *c) {
 
     /* Now lookup the command and check ASAP about trivial error conditions
      * such as wrong arity, bad command name and so forth. */
+    printf("指令:%s,%s\n",c->argv,c->argv);
     c->cmd = c->lastcmd = c->realcmd = lookupCommand(c->argv,c->argc);
     sds err;
+    //进行指令验证
     if (!commandCheckExistence(c, &err)) {
+        //指令验证错误
+        printf("指令错误：%s\n",err);
         rejectCommandSds(c, err);
         return C_OK;
     }
@@ -7239,7 +7253,9 @@ int main(int argc, char **argv) {
     redisSetCpuAffinity(server.server_cpulist);
     setOOMScoreAdj(-1);
 
+    printf("aeMain执行\n");
     aeMain(server.el);
+    printf("aeDeleteEventLoop\n");
     aeDeleteEventLoop(server.el);
     return 0;
 }

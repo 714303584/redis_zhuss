@@ -2479,6 +2479,7 @@ void commandProcessed(client *c) {
  * The function returns C_ERR in case the client was freed as a side effect
  * of processing the command, otherwise C_OK is returned. */
 int processCommandAndResetClient(client *c) {
+    //进行指令处理函数
     int deadclient = 0;
     client *old_client = server.current_client;
     server.current_client = c;
@@ -4353,6 +4354,8 @@ int postponeClientRead(client *c) {
  * it can safely perform post-processing and return to normal synchronous
  * work. */
 int handleClientsWithPendingReadsUsingThreads(void) {
+    //处理client
+//    printf("处理client(handleClientsWithPendingReadsUsingThreads(void))\n");
     if (!server.io_threads_active || !server.io_threads_do_reads) return 0;
     int processed = listLength(server.clients_pending_read);
     if (processed == 0) return 0;
@@ -4397,6 +4400,7 @@ int handleClientsWithPendingReadsUsingThreads(void) {
 
     /* Run the list of clients again to process the new buffers. */
     while(listLength(server.clients_pending_read)) {
+        printf("处理缓冲区\n");
         ln = listFirst(server.clients_pending_read);
         client *c = listNodeValue(ln);
         listDelNode(server.clients_pending_read,ln);

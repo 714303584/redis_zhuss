@@ -165,8 +165,9 @@ static inline int connWritev(connection *conn, const struct iovec *iov, int iovc
  * connGetState() to see if the connection state is still CONN_STATE_CONNECTED.
  */
 static inline int connRead(connection *conn, void *buf, size_t buf_len) {
+    //进行读取
     int ret = conn->type->read(conn, buf, buf_len);
-    printf("从客户端读取消息 -- conn：%d,buffer:%s",conn->fd,buf);
+//    printf("从客户端读取消息 -- conn：%d,buffer:%s",conn->fd,buf);
     return ret;
 }
 

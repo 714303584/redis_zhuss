@@ -401,6 +401,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
 
         /* Call the multiplexing API, will return only on timeout or when
          * some event fires. */
+        //进行处理事件
         numevents = aeApiPoll(eventLoop, tvp);
 
         /* After sleep callback. */
@@ -492,7 +493,11 @@ int aeWait(int fd, int mask, long long milliseconds) {
 
 void aeMain(aeEventLoop *eventLoop) {
     eventLoop->stop = 0;
+    //判断是否停止
     while (!eventLoop->stop) {
+        //单线程处理消息
+//        printf("进行eventLoop处理\n");
+        //进行eventLoop处理
         aeProcessEvents(eventLoop, AE_ALL_EVENTS|
                                    AE_CALL_BEFORE_SLEEP|
                                    AE_CALL_AFTER_SLEEP);
