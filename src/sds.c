@@ -28,6 +28,8 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * sds 是simple
  */
 
 #include <stdio.h>
@@ -107,11 +109,15 @@ sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
     /* Empty strings are usually created in order to append. Use type 8
      * since type 5 is not good at this. */
     if (type == SDS_TYPE_5 && initlen == 0) type = SDS_TYPE_8;
+    //获取sdsHdr大小
     int hdrlen = sdsHdrSize(type);
+    //标记位指针
     unsigned char *fp; /* flags pointer. */
+    //使用
     size_t usable;
 
     assert(initlen + hdrlen + 1 > initlen); /* Catch size_t overflow */
+    //进行内存申请
     sh = trymalloc?
         s_trymalloc_usable(hdrlen+initlen+1, &usable) :
         s_malloc_usable(hdrlen+initlen+1, &usable);
@@ -119,7 +125,7 @@ sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
     if (init==SDS_NOINIT)
         init = NULL;
     else if (!init)
-        memset(sh, 0, hdrlen+initlen+1);
+        memset(sh, 0, hdrlen+initlen+1); //进行值设置
     s = (char*)sh+hdrlen;
     fp = ((unsigned char*)s)-1;
     usable = usable-hdrlen-1;

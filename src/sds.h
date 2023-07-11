@@ -89,7 +89,18 @@ struct __attribute__ ((__packed__)) sdshdr64 {
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
 
+
+
+/**
+ *  redis的字符串数组的实现方式
+ *      len｜alloc｜flags｜buf
+ *
+ * @param s 字符串数组
+ * @return 返回的位数据的大小
+ */
 static inline size_t sdslen(const sds s) {
+    //这里使用的s[-1]代表的意思是s[index-1]去取前一个位置（flag位）
+    //s是char类型的指针 -- 指到的位置为buf位
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
@@ -106,8 +117,15 @@ static inline size_t sdslen(const sds s) {
     return 0;
 }
 
+/**
+ * 获取可用空间
+ * @param s
+ * @return
+ */
 static inline size_t sdsavail(const sds s) {
+    //获取flag标识位
     unsigned char flags = s[-1];
+    //按位并
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5: {
             return 0;
@@ -132,7 +150,13 @@ static inline size_t sdsavail(const sds s) {
     return 0;
 }
 
+/**
+ * 设置使用长度
+ * @param s
+ * @param newlen
+ */
 static inline void sdssetlen(sds s, size_t newlen) {
+    //获取标记位置
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
@@ -181,6 +205,11 @@ static inline void sdsinclen(sds s, size_t inc) {
     }
 }
 
+/**
+ * 申请到的大小
+ * @param s
+ * @return
+ */
 /* sdsalloc() = sdsavail() + sdslen() */
 static inline size_t sdsalloc(const sds s) {
     unsigned char flags = s[-1];
@@ -199,6 +228,11 @@ static inline size_t sdsalloc(const sds s) {
     return 0;
 }
 
+/**
+ * 设置申请到的大小
+ * @param s
+ * @param newlen
+ */
 static inline void sdssetalloc(sds s, size_t newlen) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {

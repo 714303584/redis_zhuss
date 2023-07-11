@@ -44,7 +44,9 @@
 #define DICT_OK 0
 #define DICT_ERR 1
 
+//dict实体
 typedef struct dictEntry {
+    //key的地址
     void *key;
     union {
         void *val;
@@ -52,7 +54,9 @@ typedef struct dictEntry {
         int64_t s64;
         double d;
     } v;
+    //桶里的下一个数据
     struct dictEntry *next;     /* Next entry in the same hash bucket. */
+
     void *metadata[];           /* An arbitrary number of bytes (starting at a
                                  * pointer-aligned address) of size as returned
                                  * by dictType's dictEntryMetadataBytes(). */
@@ -60,6 +64,9 @@ typedef struct dictEntry {
 
 typedef struct dict dict;
 
+/**
+ * 操作数据的类型 类似java的interface
+ */
 typedef struct dictType {
     uint64_t (*hashFunction)(const void *key);
     void *(*keyDup)(dict *d, const void *key);
@@ -76,6 +83,10 @@ typedef struct dictType {
 #define DICTHT_SIZE(exp) ((exp) == -1 ? 0 : (unsigned long)1<<(exp))
 #define DICTHT_SIZE_MASK(exp) ((exp) == -1 ? 0 : (DICTHT_SIZE(exp))-1)
 
+/**
+ * dict 散列表 -- 用来存储数据
+ * 整个数据库都是使用散列表实现
+ */
 struct dict {
     dictType *type;
 

@@ -106,6 +106,7 @@ dict *dictCreate(dictType *type)
 {
     //此函数创建一个Hash表
     printf("创建一个HashTable\n");
+    //进行内存分配
     dict *d = zmalloc(sizeof(*d));
 
     _dictInit(d,type);
@@ -115,6 +116,7 @@ dict *dictCreate(dictType *type)
 /* Initialize the hash table */
 int _dictInit(dict *d, dictType *type)
 {
+    printf("初始化哈希表\n");
     _dictReset(d, 0);
     _dictReset(d, 1);
     d->type = type;
@@ -209,7 +211,11 @@ int dictTryExpand(dict *d, unsigned long size) {
  * since part of the hash table may be composed of empty spaces, it is not
  * guaranteed that this function will rehash even a single bucket, since it
  * will visit at max N*10 empty buckets in total, otherwise the amount of
- * work it does would be unbound and the function may block for a long time. */
+ * work it does would be unbound and the function may block for a long time.
+ *
+ * 进行重新hash
+ *
+ * */
 int dictRehash(dict *d, int n) {
     int empty_visits = n*10; /* Max number of empty buckets to visit. */
     if (dict_can_resize == DICT_RESIZE_FORBID || !dictIsRehashing(d)) return 0;
