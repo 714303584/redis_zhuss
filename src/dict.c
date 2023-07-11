@@ -304,7 +304,9 @@ static void _dictRehashStep(dict *d) {
     if (d->pauserehash == 0) dictRehash(d,1);
 }
 
-/* Add an element to the target hash table */
+/* Add an element to the target hash table
+ * 添加一个类型到hash表中
+ * */
 int dictAdd(dict *d, void *key, void *val)
 {
     dictEntry *entry = dictAddRaw(d,key,NULL);
@@ -315,6 +317,7 @@ int dictAdd(dict *d, void *key, void *val)
 }
 
 /* Low level add or find:
+ * 这个函数添加一条数据
  * This function adds the entry but instead of setting a value returns the
  * dictEntry structure to the user, that will make sure to fill the value
  * field as they wish.
@@ -335,13 +338,17 @@ int dictAdd(dict *d, void *key, void *val)
 dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing)
 {
     long index;
+    //散列实体
     dictEntry *entry;
     int htidx;
 
+    //是否正在重新计算hash值
     if (dictIsRehashing(d)) _dictRehashStep(d);
 
     /* Get the index of the new element, or -1 if
-     * the element already exists. */
+     * the element already exists.
+     *  获取key所在的桶
+     * */
     if ((index = _dictKeyIndex(d, key, dictHashKey(d,key), existing)) == -1)
         return NULL;
 
@@ -351,12 +358,17 @@ dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing)
      * more frequently. */
     htidx = dictIsRehashing(d) ? 1 : 0;
     size_t metasize = dictMetadataSize(d);
+    //申请空间
     entry = zmalloc(sizeof(*entry) + metasize);
     if (metasize > 0) {
+        //设置值
         memset(dictMetadata(entry), 0, metasize);
     }
+    //获取桶
     entry->next = d->ht_table[htidx][index];
+    //设置实体
     d->ht_table[htidx][index] = entry;
+
     d->ht_used[htidx]++;
 
     /* Set the hash entry fields. */
