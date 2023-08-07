@@ -28,6 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * 已经废弃ziplist 采用quickList存储列表集合
+ */
+
 #ifndef _ZIPLIST_H
 #define _ZIPLIST_H
 
@@ -43,7 +47,9 @@ typedef struct {
     long long lval;
 } ziplistEntry;
 
+//创建一个新的压缩列表
 unsigned char *ziplistNew(void);
+//
 unsigned char *ziplistMerge(unsigned char **first, unsigned char **second);
 unsigned char *ziplistPush(unsigned char *zl, unsigned char *s, unsigned int slen, int where);
 unsigned char *ziplistIndex(unsigned char *zl, int index);

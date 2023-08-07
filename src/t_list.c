@@ -187,8 +187,11 @@ int listTypeEqual(listTypeEntry *entry, robj *o) {
     }
 }
 
-/* Delete the element pointed to. */
+/* Delete the element pointed to.
+ * 列表类型删除
+ * */
 void listTypeDelete(listTypeIterator *iter, listTypeEntry *entry) {
+    printf("delete a element from list\n");
     if (entry->li->encoding == OBJ_ENCODING_QUICKLIST) {
         quicklistDelEntry(iter->iter, &entry->entry);
     } else {

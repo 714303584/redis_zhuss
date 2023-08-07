@@ -102,10 +102,12 @@ typedef struct quicklistBookmark {
  *                of quicklistNodes to leave uncompressed at ends of quicklist.
  * 'fill' is the user-requested (or default) fill factor.
  * 'bookmarks are an optional feature that is used by realloc this struct,
- *      so that they don't consume memory when not used. */
+ *      so that they don't consume memory when not used.
+ *      quicklist 实体
+ *      */
 typedef struct quicklist {
-    quicklistNode *head;
-    quicklistNode *tail;
+    quicklistNode *head; //头部
+    quicklistNode *tail; //尾部
     unsigned long count;        /* total count of all entries in all listpacks */
     unsigned long len;          /* number of quicklistNodes */
     signed int fill : QL_FILL_BITS;       /* fill factor for individual nodes */
@@ -122,6 +124,9 @@ typedef struct quicklistIter {
     int direction;
 } quicklistIter;
 
+/**
+ * 链表的实体
+ */
 typedef struct quicklistEntry {
     const quicklist *quicklist;
     quicklistNode *node;
@@ -154,6 +159,7 @@ typedef struct quicklistEntry {
 /* Prototypes */
 quicklist *quicklistCreate(void);
 quicklist *quicklistNew(int fill, int compress);
+
 void quicklistSetCompressDepth(quicklist *quicklist, int depth);
 void quicklistSetFill(quicklist *quicklist, int fill);
 void quicklistSetOptions(quicklist *quicklist, int fill, int depth);
@@ -168,6 +174,7 @@ void quicklistInsertAfter(quicklistIter *iter, quicklistEntry *entry,
                           void *value, const size_t sz);
 void quicklistInsertBefore(quicklistIter *iter, quicklistEntry *entry,
                            void *value, const size_t sz);
+//删除连标里的数据
 void quicklistDelEntry(quicklistIter *iter, quicklistEntry *entry);
 void quicklistReplaceEntry(quicklistIter *iter, quicklistEntry *entry,
                            void *data, size_t sz);

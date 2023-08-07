@@ -123,8 +123,11 @@ void _quicklistBookmarkDelete(quicklist *ql, quicklistBookmark *bm);
     } while (0)
 
 /* Create a new quicklist.
- * Free with quicklistRelease(). */
+ * Free with quicklistRelease().
+ * 创建一个新的去quickList
+ * */
 quicklist *quicklistCreate(void) {
+    printf("quicklistCreate(void)\n");
     struct quicklist *quicklist;
 
     quicklist = zmalloc(sizeof(*quicklist));
@@ -162,7 +165,9 @@ void quicklistSetOptions(quicklist *quicklist, int fill, int depth) {
     quicklistSetCompressDepth(quicklist, depth);
 }
 
-/* Create a new quicklist with some default parameters. */
+/* Create a new quicklist with some default parameters.
+ *  创建一个默认的QuickList
+ * */
 quicklist *quicklistNew(int fill, int compress) {
     quicklist *quicklist = quicklistCreate();
     quicklistSetOptions(quicklist, fill, compress);
@@ -697,14 +702,20 @@ REDIS_STATIC int quicklistDelIndex(quicklist *quicklist, quicklistNode *node,
 }
 
 /* Delete one element represented by 'entry'
+ * 删除一个节点
  *
  * 'entry' stores enough metadata to delete the proper position in
  * the correct listpack in the correct quicklist node. */
 void quicklistDelEntry(quicklistIter *iter, quicklistEntry *entry) {
+
+    printf("quicklist delete entry start!\n");
+    //获取上一个节点
+    //获取下一个节点
     quicklistNode *prev = entry->node->prev;
     quicklistNode *next = entry->node->next;
     int deleted_node = quicklistDelIndex((quicklist *)entry->quicklist,
                                          entry->node, &entry->zi);
+
 
     /* after delete, the zi is now invalid for any future usage. */
     iter->zi = NULL;

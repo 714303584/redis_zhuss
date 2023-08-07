@@ -334,6 +334,8 @@ int dictAdd(dict *d, void *key, void *val)
  * with the existing entry if existing is not NULL.
  *
  * If key was added, the hash entry is returned to be manipulated by the caller.
+ *
+ * 添加一行数据
  */
 dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing)
 {
@@ -361,7 +363,7 @@ dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing)
     //申请空间
     entry = zmalloc(sizeof(*entry) + metasize);
     if (metasize > 0) {
-        //设置值
+        //初始化metasize
         memset(dictMetadata(entry), 0, metasize);
     }
     //获取桶
