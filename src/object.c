@@ -40,6 +40,9 @@
 /* ===================== Creation and parsing of objects ==================== */
 
 robj *createObject(int type, void *ptr) {
+    //创建一个对象
+    printf("createObject(int type, void *ptr) 创建一个对象\n");
+    //进行内存分配
     robj *o = zmalloc(sizeof(*o));
     o->type = type;
     o->encoding = OBJ_ENCODING_RAW;
@@ -76,6 +79,8 @@ robj *makeObjectShared(robj *o) {
 /* Create a string object with encoding OBJ_ENCODING_RAW, that is a plain
  * string object where o->ptr points to a proper sds string. */
 robj *createRawStringObject(const char *ptr, size_t len) {
+    //这里创建一个rawstring实体
+    printf("createRawStringObject(const char *ptr, size_t len) 创建一个rawstring实体\n");
     return createObject(OBJ_STRING, sdsnewlen(ptr,len));
 }
 
@@ -118,6 +123,7 @@ robj *createEmbeddedStringObject(const char *ptr, size_t len) {
  * we allocate as EMBSTR will still fit into the 64 byte arena of jemalloc. */
 #define OBJ_ENCODING_EMBSTR_SIZE_LIMIT 44
 robj *createStringObject(const char *ptr, size_t len) {
+    printf("createStringObject(const char *ptr, size_t len) 创建一个string实体\n");
     if (len <= OBJ_ENCODING_EMBSTR_SIZE_LIMIT)
         return createEmbeddedStringObject(ptr,len);
     else
@@ -235,21 +241,36 @@ robj *createQuicklistObject(void) {
     return o;
 }
 
+/**
+ * @return  一个set类型的对象
+ */
 robj *createSetObject(void) {
+    //创建一个set类型的对象
+    printf("创建一个set类型的对象\n");
     dict *d = dictCreate(&setDictType);
     robj *o = createObject(OBJ_SET,d);
     o->encoding = OBJ_ENCODING_HT;
     return o;
 }
 
+/**
+ *
+ * @return 创建一个int类型的set对象
+ */
 robj *createIntsetObject(void) {
+    //int 类型单独创建
     intset *is = intsetNew();
     robj *o = createObject(OBJ_SET,is);
     o->encoding = OBJ_ENCODING_INTSET;
     return o;
 }
 
+/**
+ * 创建一个hash类型的对象
+ * @return
+ */
 robj *createHashObject(void) {
+    //注意使用的是listpack创建
     unsigned char *zl = lpNew(0);
     robj *o = createObject(OBJ_HASH, zl);
     o->encoding = OBJ_ENCODING_LISTPACK;
@@ -267,6 +288,10 @@ robj *createZsetObject(void) {
     return o;
 }
 
+/**
+ * 创建一个sorted
+ * @return
+ */
 robj *createZsetListpackObject(void) {
     unsigned char *lp = lpNew(0);
     robj *o = createObject(OBJ_ZSET,lp);

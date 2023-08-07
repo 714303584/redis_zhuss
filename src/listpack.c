@@ -992,6 +992,9 @@ unsigned char *lpReplaceInteger(unsigned char *lp, unsigned char **p, long long 
  * deleted one) is returned by reference. If the deleted element was the
  * last one, '*newp' is set to NULL. */
 unsigned char *lpDelete(unsigned char *lp, unsigned char *p, unsigned char **newp) {
+    //调用listpack函数删除一个位置的
+    printf("*lpDelete(unsigned char *lp, unsigned char *p, unsigned char **newp)"
+           " listpack删除\n");
     return lpInsert(lp,NULL,NULL,0,p,LP_REPLACE,newp);
 }
 

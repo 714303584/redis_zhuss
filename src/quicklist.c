@@ -161,6 +161,7 @@ void quicklistSetFill(quicklist *quicklist, int fill) {
 }
 
 void quicklistSetOptions(quicklist *quicklist, int fill, int depth) {
+    //设置一个
     quicklistSetFill(quicklist, fill);
     quicklistSetCompressDepth(quicklist, depth);
 }
@@ -175,6 +176,7 @@ quicklist *quicklistNew(int fill, int compress) {
 }
 
 REDIS_STATIC quicklistNode *quicklistCreateNode(void) {
+    printf("quicklistCreateNode(void)创建一个快速列表的节点\n");
     quicklistNode *node;
     node = zmalloc(sizeof(*node));
     node->entry = NULL;
@@ -544,10 +546,13 @@ static void __quicklistInsertPlainNode(quicklist *quicklist, quicklistNode *old_
 }
 
 /* Add new entry to head node of quicklist.
- *
+ * 添加一个新实体到快速列表
  * Returns 0 if used existing head.
  * Returns 1 if new head created. */
 int quicklistPushHead(quicklist *quicklist, void *value, size_t sz) {
+
+    printf("quicklistPushHead(quicklist *quicklist, void *value, size_t sz) "
+           "添加一个实体到快速列表\n");
     quicklistNode *orig_head = quicklist->head;
 
     if (unlikely(isLargeElement(sz))) {
@@ -688,6 +693,7 @@ REDIS_STATIC int quicklistDelIndex(quicklist *quicklist, quicklistNode *node,
         __quicklistDelNode(quicklist, node);
         return 1;
     }
+    //删除
     node->entry = lpDelete(node->entry, *p, p);
     node->count--;
     if (node->count == 0) {

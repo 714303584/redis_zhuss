@@ -164,10 +164,12 @@ void quicklistSetCompressDepth(quicklist *quicklist, int depth);
 void quicklistSetFill(quicklist *quicklist, int fill);
 void quicklistSetOptions(quicklist *quicklist, int fill, int depth);
 void quicklistRelease(quicklist *quicklist);
+//快速列表push头部
 int quicklistPushHead(quicklist *quicklist, void *value, const size_t sz);
 int quicklistPushTail(quicklist *quicklist, void *value, const size_t sz);
 void quicklistPush(quicklist *quicklist, void *value, const size_t sz,
                    int where);
+//添加追加listpack
 void quicklistAppendListpack(quicklist *quicklist, unsigned char *zl);
 void quicklistAppendPlainNode(quicklist *quicklist, unsigned char *data, size_t sz);
 void quicklistInsertAfter(quicklistIter *iter, quicklistEntry *entry,

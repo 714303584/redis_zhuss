@@ -205,12 +205,14 @@ void listTypeDelete(listTypeIterator *iter, listTypeEntry *entry) {
  *
  * The resulting object always has refcount set to 1 */
 robj *listTypeDup(robj *o) {
+    printf("listTypeDup(robj *o)\n");
     robj *lobj;
 
     serverAssert(o->type == OBJ_LIST);
 
     switch (o->encoding) {
         case OBJ_ENCODING_QUICKLIST:
+
             lobj = createObject(OBJ_LIST, quicklistDup(o->ptr));
             lobj->encoding = o->encoding;
             break;
