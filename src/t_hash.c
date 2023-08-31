@@ -434,7 +434,14 @@ sds hashTypeCurrentObjectNewSds(hashTypeIterator *hi, int what) {
     return sdsfromlonglong(vll);
 }
 
+/**
+ * 创建一个hash类型的实体
+ * @param c
+ * @param key
+ * @return
+ */
 robj *hashTypeLookupWriteOrCreate(client *c, robj *key) {
+    //查找
     robj *o = lookupKeyWrite(c->db,key);
     if (checkType(c,o,OBJ_HASH)) return NULL;
 

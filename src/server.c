@@ -2979,6 +2979,8 @@ extern struct redisCommand redisCommandTable[];
 /* Populates the Redis Command Table dict from the static table in commands.c
  * which is auto generated from the json files in the commands folder. */
 void populateCommandTable(void) {
+    //这里处理命令么
+
     int j;
     struct redisCommand *c;
 

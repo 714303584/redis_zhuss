@@ -67,8 +67,11 @@ int zslLexValueGteMin(sds value, zlexrangespec *spec);
 int zslLexValueLteMax(sds value, zlexrangespec *spec);
 
 /* Create a skiplist node with the specified number of levels.
- * The SDS string 'ele' is referenced by the node after the call. */
+ * The SDS string 'ele' is referenced by the node after the call.
+ *  创建一个跳表的节点
+ * */
 zskiplistNode *zslCreateNode(int level, double score, sds ele) {
+    printf("zset 创建一个节点\n");
     zskiplistNode *zn =
         zmalloc(sizeof(*zn)+level*sizeof(struct zskiplistLevel));
     zn->score = score;
@@ -76,15 +79,25 @@ zskiplistNode *zslCreateNode(int level, double score, sds ele) {
     return zn;
 }
 
-/* Create a new skiplist. */
+/* Create a new skiplist.
+ *  创建一个跳表
+ * */
 zskiplist *zslCreate(void) {
+
+    printf("zset 创建\n");
     int j;
+    //跳表
     zskiplist *zsl;
 
+    //申请内存
     zsl = zmalloc(sizeof(*zsl));
+    //设置level为1
     zsl->level = 1;
+    //设置列表长度 -- 0
     zsl->length = 0;
+    //创建一个空的节点为head
     zsl->header = zslCreateNode(ZSKIPLIST_MAXLEVEL,0,NULL);
+    //初始化一些数据
     for (j = 0; j < ZSKIPLIST_MAXLEVEL; j++) {
         zsl->header->level[j].forward = NULL;
         zsl->header->level[j].span = 0;
@@ -1317,6 +1330,7 @@ int zsetScore(robj *zobj, sds member, double *score) {
  * The function does not take ownership of the 'ele' SDS string, but copies
  * it if needed. */
 int zsetAdd(robj *zobj, double score, sds ele, int in_flags, int *out_flags, double *newscore) {
+    printf("zset add 这里添加一个zset节点\n");
     /* Turn options into simple to check vars. */
     int incr = (in_flags & ZADD_IN_INCR) != 0;
     int nx = (in_flags & ZADD_IN_NX) != 0;
@@ -1332,8 +1346,16 @@ int zsetAdd(robj *zobj, double score, sds ele, int in_flags, int *out_flags, dou
         return 0;
     }
 
-    /* Update the sorted set according to its encoding. */
+    /* Update the sorted set according to its encoding.
+     *
+     * 这里判断编码格式的问题
+     *   当保存的元素个数少于128个并且保存的元素大小都小于64字节时采用listpack方式编码
+     *
+     *   todo 待确定
+     * */
     if (zobj->encoding == OBJ_ENCODING_LISTPACK) {
+        //采用的listpack编码格式
+        printf("这里采用listpack编码格式");
         unsigned char *eptr;
 
         if ((eptr = zzlFind(zobj->ptr,ele,&curscore)) != NULL) {
@@ -1388,8 +1410,12 @@ int zsetAdd(robj *zobj, double score, sds ele, int in_flags, int *out_flags, dou
     }
 
     /* Note that the above block handling listpack would have either returned or
-     * converted the key to skiplist. */
+     * converted the key to skiplist.
+     *  采用跳表的编码格式
+     *
+     * */
     if (zobj->encoding == OBJ_ENCODING_SKIPLIST) {
+        printf("采用跳表的编码格式");
         zset *zs = zobj->ptr;
         zskiplistNode *znode;
         dictEntry *de;
@@ -1664,8 +1690,10 @@ void zsetTypeRandomElement(robj *zsetobj, unsigned long zsetsize, listpackEntry 
 
 /* This generic command implements both ZADD and ZINCRBY. */
 void zaddGenericCommand(client *c, int flags) {
+    printf("zadd 命令入口 zaddGenericCommand(client *c, int flags)\n");
     static char *nanerr = "resulting score is not a number (NaN)";
     robj *key = c->argv[1];
+    printf("zaddGenericCommand client->argv(1): %s \n",&key);
     robj *zobj;
     sds ele;
     double score = 0, *scores = NULL;
@@ -1730,7 +1758,9 @@ void zaddGenericCommand(client *c, int flags) {
         return;
     }
 
-    /* Start parsing all the scores, we need to emit any syntax error
+    /*
+     * 解析评分
+     * Start parsing all the scores, we need to emit any syntax error
      * before executing additions to the sorted set, as the command should
      * either execute fully or nothing at all. */
     scores = zmalloc(sizeof(double)*elements);
@@ -1739,16 +1769,24 @@ void zaddGenericCommand(client *c, int flags) {
             != C_OK) goto cleanup;
     }
 
-    /* Lookup the key and create the sorted set if does not exist. */
+    /* Lookup the key and create the sorted set if does not exist.
+     *
+     * 查看这个key是否在集合中是否存在
+     * */
     zobj = lookupKeyWrite(c->db,key);
     if (checkType(c,zobj,OBJ_ZSET)) goto cleanup;
     if (zobj == NULL) {
         if (xx) goto reply_to_client; /* No key + XX option: nothing to do. */
+
+        printf("zset_max_listpack_entries(zset max count)：%d, zset_max_listpack_value(zset value max count):%d\n ",
+               server.zset_max_listpack_entries,server.zset_max_listpack_value);
         if (server.zset_max_listpack_entries == 0 ||
-            server.zset_max_listpack_value < sdslen(c->argv[scoreidx+1]->ptr))
+            server.zset_max_listpack_value < sdslen(c->argv[scoreidx+1]->ptr)) //这里判断使用的类型
         {
+            printf("createZsetObject() \n");
             zobj = createZsetObject();
         } else {
+            printf("createZsetListpackObject() \n");
             zobj = createZsetListpackObject();
         }
         dbAdd(c->db,key,zobj);

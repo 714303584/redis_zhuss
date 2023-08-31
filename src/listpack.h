@@ -45,18 +45,27 @@
 #define LP_AFTER 1
 #define LP_REPLACE 2
 
-/* Each entry in the listpack is either a string or an integer. */
+/* Each entry in the listpack is either a string or an integer.
+ * listpack 使用列表
+ * */
 typedef struct {
-    /* When string is used, it is provided with the length (slen). */
+    /* When string is used, it is provided with the length (slen).
+     * 当使用string时，它具有长度
+     * */
     unsigned char *sval;
     uint32_t slen;
-    /* When integer is used, 'sval' is NULL, and lval holds the value. */
+    /* When integer is used, 'sval' is NULL, and lval holds the value.
+     *  当使用integer时， sval 时空， lval保存int值
+     * */
     long long lval;
 } listpackEntry;
 
+//新的listpack
 unsigned char *lpNew(size_t capacity);
 void lpFree(unsigned char *lp);
 unsigned char* lpShrinkToFit(unsigned char *lp);
+
+//添加一个字符串到listpack
 unsigned char *lpInsertString(unsigned char *lp, unsigned char *s, uint32_t slen,
                               unsigned char *p, int where, unsigned char **newp);
 unsigned char *lpInsertInteger(unsigned char *lp, long long lval,

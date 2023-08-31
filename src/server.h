@@ -1275,9 +1275,12 @@ typedef struct zskiplist {
     int level;
 } zskiplist;
 
+/**
+ * 这个是zset的实体
+ */
 typedef struct zset {
     dict *dict;
-    zskiplist *zsl;
+    zskiplist *zsl; //跳表列表
 } zset;
 
 typedef struct clientBufferLimitsConfig {

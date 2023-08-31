@@ -43,6 +43,11 @@
 
 const char *SDS_NOINIT = "SDS_NOINIT";
 
+/**
+ * 通过类型获取hdr大小
+ * @param type 类型
+ * @return
+ */
 static inline int sdsHdrSize(char type) {
     switch(type&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
@@ -101,10 +106,13 @@ static inline size_t sdsTypeMaxSize(char type) {
  *
  * You can print the string with printf() as there is an implicit \0 at the
  * end of the string. However the string is binary safe and can contain
- * \0 characters in the middle, as the length is stored in the sds header. */
+ * \0 characters in the middle, as the length is stored in the sds header.
+ * 创建一个新字符串
+ * */
 sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
     void *sh;
     sds s;
+    //获取字符串的类型
     char type = sdsReqType(initlen);
     /* Empty strings are usually created in order to append. Use type 8
      * since type 5 is not good at this. */
@@ -172,6 +180,7 @@ sds _sdsnewlen(const void *init, size_t initlen, int trymalloc) {
 }
 
 sds sdsnewlen(const void *init, size_t initlen) {
+    //字符串
     return _sdsnewlen(init, initlen, 0);
 }
 
@@ -187,7 +196,10 @@ sds sdsempty(void) {
 
 /* Create a new sds string starting from a null terminated C string. */
 sds sdsnew(const char *init) {
+    printf("创建一个sds字符串：%s\n",init);
+    //获取字符串的长度
     size_t initlen = (init == NULL) ? 0 : strlen(init);
+    //创建新字符串
     return sdsnewlen(init, initlen);
 }
 

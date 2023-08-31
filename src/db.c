@@ -83,8 +83,12 @@ void updateLFU(robj *val) {
  * still existing, in case this is a replica and the LOOKUP_WRITE is not set.
  * Even if the key expiry is master-driven, we can correctly report a key is
  * expired on replicas even if the master is lagging expiring our key via DELs
- * in the replication link. */
+ * in the replication link.
+ *
+ *  查找key
+ * */
 robj *lookupKey(redisDb *db, robj *key, int flags) {
+    //调用dicFind函数查找key
     dictEntry *de = dictFind(db->dict,key->ptr);
     robj *val = NULL;
     if (de) {

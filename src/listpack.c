@@ -240,16 +240,22 @@ int lpStringToInt64(const char *s, unsigned long slen, int64_t *value) {
  * over-allocated memory can be shrunk by `lpShrinkToFit`.
  * */
 unsigned char *lpNew(size_t capacity) {
+    printf("lpNew(size_t capacity) 申请listpack\n");
     unsigned char *lp = lp_malloc(capacity > LP_HDR_SIZE+1 ? capacity : LP_HDR_SIZE+1);
-    if (lp == NULL) return NULL;
+    if (lp == NULL)
+        return NULL;
+    //设置总大小
     lpSetTotalBytes(lp,LP_HDR_SIZE+1);
+    //设置数量
     lpSetNumElements(lp,0);
+    //设置结束标志
     lp[LP_HDR_SIZE] = LP_EOF;
     return lp;
 }
 
 /* Free the specified listpack. */
 void lpFree(unsigned char *lp) {
+    //
     lp_free(lp);
 }
 
@@ -401,6 +407,9 @@ static inline uint64_t lpDecodeBacklen(unsigned char *p) {
  * space for encoding the string. This is done by calling lpEncodeGetType()
  * before calling this function. */
 static inline void lpEncodeString(unsigned char *buf, unsigned char *s, uint32_t len) {
+
+    printf("listpack进行String类型的编码（lpEncodeString）\n");
+    printf("lpEncodeString (%s,%s,len=%d) \n",buf,s,len);
     if (len < 64) {
         buf[0] = len | LP_ENCODING_6BIT_STR;
         memcpy(buf+1,s,len);
@@ -472,6 +481,7 @@ unsigned char *lpSkip(unsigned char *p) {
  * the pointer to the next element (the one on the right), or NULL if 'p'
  * already pointed to the last element of the listpack. */
 unsigned char *lpNext(unsigned char *lp, unsigned char *p) {
+    printf("*lpNext(unsigned char *lp, unsigned char *p) lp下一个元素\n");
     assert(p);
     p = lpSkip(p);
     if (p[0] == LP_EOF) return NULL;
@@ -659,7 +669,15 @@ static inline unsigned char *lpGetWithSize(unsigned char *p, int64_t *count, uns
     }
 }
 
+/**
+ * listpack 获取值
+ * @param p
+ * @param count
+ * @param intbuf
+ * @return
+ */
 unsigned char *lpGet(unsigned char *p, int64_t *count, unsigned char *intbuf) {
+    printf("listpack 获取元素*lpGet(*p, count=%d, intbuf=%d)\n", &count, &intbuf);
     return lpGetWithSize(p, count, intbuf, NULL);
 }
 
@@ -776,28 +794,43 @@ unsigned char *lpFind(unsigned char *lp, unsigned char *p, unsigned char *s,
  *
  * For deletion operations (both 'elestr' and 'eleint' set to NULL) 'newp' is
  * set to the next element, on the right of the deleted one, or to NULL if the
- * deleted element was the last one. */
+ * deleted element was the last one.
+ *  listpack插入的实际执行方法
+ * */
 unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char *eleint,
                         uint32_t size, unsigned char *p, int where, unsigned char **newp)
 {
+
+    printf("进行listpack插入操作（lpInsert）\n");
+
+    // lp的指针
+    // elestr 需要插入的数据的指针
+    // eleInt
+    // size 大小
+
     unsigned char intenc[LP_MAX_INT_ENCODING_LEN];
     unsigned char backlen[LP_MAX_BACKLEN_SIZE];
 
     uint64_t enclen; /* The length of the encoded element. */
-    int delete = (elestr == NULL && eleint == NULL);
+    int delete = (elestr == NULL && eleint == NULL); // 是否删除
 
     /* when deletion, it is conceptually replacing the element with a
      * zero-length element. So whatever we get passed as 'where', set
      * it to LP_REPLACE. */
-    if (delete) where = LP_REPLACE;
+    if (delete){
+        where = LP_REPLACE;
+    }
 
     /* If we need to insert after the current element, we just jump to the
      * next element (that could be the EOF one) and handle the case of
      * inserting before. So the function will actually deal with just two
-     * cases: LP_BEFORE and LP_REPLACE. */
+     * cases: LP_BEFORE and LP_REPLACE.
+     *  如果我们需要插入一个节点，我们仅仅需要跳过下一个节点
+     * */
     if (where == LP_AFTER) {
         p = lpSkip(p);
         where = LP_BEFORE;
+        printf("lpInsert.where is LP_BEFORE \n");
         ASSERT_INTEGRITY(lp, p);
     }
 
@@ -815,9 +848,13 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
         *
         * Whatever the returned encoding is, 'enclen' is populated with the
         * length of the encoded element. */
+        //listpack编码类型
         enctype = lpEncodeGetType(elestr,size,intenc,&enclen);
-        if (enctype == LP_ENCODING_INT) eleint = intenc;
+        if (enctype == LP_ENCODING_INT){
+            eleint = intenc;
+        }
     } else if (eleint) {
+        //编码类型为整数
         enctype = LP_ENCODING_INT;
         enclen = size; /* 'size' is the length of the encoded integer element. */
     } else {
@@ -831,15 +868,20 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     unsigned long backlen_size = (!delete) ? lpEncodeBacklen(backlen,enclen) : 0;
     uint64_t old_listpack_bytes = lpGetTotalBytes(lp);
     uint32_t replaced_len  = 0;
+
     if (where == LP_REPLACE) {
+        //这里进行替换 --
         replaced_len = lpCurrentEncodedSizeUnsafe(p);
         replaced_len += lpEncodeBacklen(NULL,replaced_len);
+        printf("这里进行替换操作, 替换长度为：%d", replaced_len);
         ASSERT_INTEGRITY_LEN(lp, p, replaced_len);
     }
 
-    uint64_t new_listpack_bytes = old_listpack_bytes + enclen + backlen_size
-                                  - replaced_len;
-    if (new_listpack_bytes > UINT32_MAX) return NULL;
+    uint64_t new_listpack_bytes = old_listpack_bytes //旧位置
+            + enclen //编码长度
+            + backlen_size //
+                                   - replaced_len; // 替换长度
+    if (new_listpack_bytes > UINT32_MAX) return NULL; //容错判断
 
     /* We now need to reallocate in order to make space or shrink the
      * allocation (in case 'when' value is LP_REPLACE and the new element is
@@ -850,6 +892,7 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     unsigned char *dst = lp + poff; /* May be updated after reallocation. */
 
     /* Realloc before: we need more room. */
+    //我们需要更多空间
     if (new_listpack_bytes > old_listpack_bytes &&
         new_listpack_bytes > lp_malloc_size(lp)) {
         if ((lp = lp_realloc(lp,new_listpack_bytes)) == NULL) return NULL;
@@ -859,6 +902,8 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     /* Setup the listpack relocating the elements to make the exact room
      * we need to store the new one. */
     if (where == LP_BEFORE) {
+        printf("where == LP_BEFORE \n");
+        //before
         memmove(dst+enclen+backlen_size,dst,old_listpack_bytes-poff);
     } else { /* LP_REPLACE. */
         long lendiff = (enclen+backlen_size)-replaced_len;
@@ -873,7 +918,9 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
         dst = lp + poff;
     }
 
-    /* Store the entry. */
+    /* Store the entry.
+     * 存储实体
+     * */
     if (newp) {
         *newp = dst;
         /* In case of deletion, set 'newp' to NULL if the next element is
@@ -882,23 +929,33 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     }
     if (!delete) {
         if (enctype == LP_ENCODING_INT) {
+            //保存整数类型
             memcpy(dst,eleint,enclen);
         } else {
+            //编码
             lpEncodeString(dst,elestr,size);
         }
         dst += enclen;
+        //进行内存复制保存
+        printf("lpInsert进行保存 memcpy(dst,%d,%d)\n",backlen, backlen_size);
         memcpy(dst,backlen,backlen_size);
         dst += backlen_size;
     }
 
-    /* Update header. */
+    /* Update header. 更新头部 */
     if (where != LP_REPLACE || delete) {
-        uint32_t num_elements = lpGetNumElements(lp);
+        uint32_t num_elements = lpGetNumElements(lp); //这一步是获取listpack中的节点数量
+        printf("listpack存储数量:%d\n",num_elements);
+
         if (num_elements != LP_HDR_NUMELE_UNKNOWN) {
             if (!delete)
+            {
                 lpSetNumElements(lp,num_elements+1);
+            }
             else
-                lpSetNumElements(lp,num_elements-1);
+            {
+                lpSetNumElements(lp,num_elements-1); //删除为减1
+            }
         }
     }
     lpSetTotalBytes(lp,new_listpack_bytes);
@@ -929,6 +986,8 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
 unsigned char *lpInsertString(unsigned char *lp, unsigned char *s, uint32_t slen,
                               unsigned char *p, int where, unsigned char **newp)
 {
+    printf("插入一个字符串到listpack（lpInsertString）\n");
+    //直接调用lpInsert进行插入
     return lpInsert(lp, s, NULL, slen, p, where, newp);
 }
 

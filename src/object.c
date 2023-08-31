@@ -277,6 +277,10 @@ robj *createHashObject(void) {
     return o;
 }
 
+/**
+ * 创建一个zset的对象
+ * @return
+ */
 robj *createZsetObject(void) {
     zset *zs = zmalloc(sizeof(*zs));
     robj *o;
@@ -284,6 +288,7 @@ robj *createZsetObject(void) {
     zs->dict = dictCreate(&zsetDictType);
     zs->zsl = zslCreate();
     o = createObject(OBJ_ZSET,zs);
+    //设置编码格式为skipList方式
     o->encoding = OBJ_ENCODING_SKIPLIST;
     return o;
 }
@@ -295,6 +300,7 @@ robj *createZsetObject(void) {
 robj *createZsetListpackObject(void) {
     unsigned char *lp = lpNew(0);
     robj *o = createObject(OBJ_ZSET,lp);
+    //这里创建了一个listPack对象
     o->encoding = OBJ_ENCODING_LISTPACK;
     return o;
 }
