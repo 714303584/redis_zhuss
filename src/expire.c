@@ -106,13 +106,20 @@ int activeExpireCycleTryExpire(redisDb *db, dictEntry *de, long long now) {
  * order to do more work in both the fast and slow expire cycles.
  */
 
+//每个DB需要循环的Key的个数
 #define ACTIVE_EXPIRE_CYCLE_KEYS_PER_LOOP 20 /* Keys for each DB loop. */
+
 #define ACTIVE_EXPIRE_CYCLE_FAST_DURATION 1000 /* Microseconds. */
 #define ACTIVE_EXPIRE_CYCLE_SLOW_TIME_PERC 25 /* Max % of CPU to use. */
 #define ACTIVE_EXPIRE_CYCLE_ACCEPTABLE_STALE 10 /* % of stale keys after which
                                                    we do extra efforts. */
 
+/*
+ *
+ *  定期删除过期Key的循环
+ * */
 void activeExpireCycle(int type) {
+//    printf("执行定期删除\n");
     /* Adjust the running parameters according to the configured expire
      * effort. The default effort is 1, and the maximum configurable effort
      * is 10. */
@@ -129,6 +136,7 @@ void activeExpireCycle(int type) {
 
     /* This function has some global state in order to continue the work
      * incrementally across calls. */
+    //当前db
     static unsigned int current_db = 0; /* Next DB to test. */
     static int timelimit_exit = 0;      /* Time limit hit in previous call? */
     static long long last_fast_cycle = 0; /* When last fast cycle ran. */
@@ -190,10 +198,12 @@ void activeExpireCycle(int type) {
     server.core_propagates = 1;
     server.propagate_no_multi = 1;
 
+    //循环处理
     for (j = 0; j < dbs_per_call && timelimit_exit == 0; j++) {
         /* Expired and checked in a single loop. */
         unsigned long expired, sampled;
 
+        //获取db
         redisDb *db = server.db+(current_db % server.dbnum);
 
         /* Increment the DB now so we are sure if we run out of time
@@ -212,12 +222,12 @@ void activeExpireCycle(int type) {
             iteration++;
 
             /* If there is nothing to expire try next DB ASAP. */
-            if ((num = dictSize(db->expires)) == 0) {
+            if ((num = dictSize(db->expires)) == 0) { //没有设置过期key
                 db->avg_ttl = 0;
                 break;
             }
             slots = dictSlots(db->expires);
-            now = mstime();
+            now = mstime(); // 获取当前时间
 
             /* When there are less than 1% filled slots, sampling the key
              * space is expensive, so stop here waiting for better times...
@@ -250,10 +260,15 @@ void activeExpireCycle(int type) {
 
             while (sampled < num && checked_buckets < max_buckets) {
                 for (int table = 0; table < 2; table++) {
+                    //过期表是否正在进行hash重算
+                    //如果进行hash重算 -- 跳出循环
+                    //
                     if (table == 1 && !dictIsRehashing(db->expires)) break;
 
                     unsigned long idx = db->expires_cursor;
                     idx &= DICTHT_SIZE_MASK(db->expires->ht_size_exp[table]);
+
+                    //获取一个dictEntry
                     dictEntry *de = db->expires->ht_table[table][idx];
                     long long ttl;
 
@@ -266,7 +281,10 @@ void activeExpireCycle(int type) {
                         de = de->next;
 
                         ttl = dictGetSignedIntegerVal(e)-now;
-                        if (activeExpireCycleTryExpire(db,e,now)) expired++;
+                        if (activeExpireCycleTryExpire(db,e,now)) {
+                            printf("这里是定期过期key: %s\n", de->key);
+                            expired++;
+                        }
                         if (ttl > 0) {
                             /* We want the average TTL of keys yet
                              * not expired. */
@@ -560,7 +578,10 @@ int parseExtendedExpireArgumentsOrReply(client *c, int *flags) {
  *
  * Additional flags are supported and parsed via parseExtendedExpireArguments */
 void expireGenericCommand(client *c, long long basetime, int unit) {
-    robj *key = c->argv[1], *param = c->argv[2];
+    //这里执行过期命令
+    robj *key = c->argv[1], //获取需要过期的key
+    *param = c->argv[2];
+    printf("设置过期的key：%s", key->ptr);
     long long when; /* unix time in milliseconds when the key will expire. */
     long long current_expire = -1;
     int flag = 0;
@@ -679,6 +700,8 @@ void expireGenericCommand(client *c, long long basetime, int unit) {
 
 /* EXPIRE key seconds [ NX | XX | GT | LT] */
 void expireCommand(client *c) {
+    //这里设置过期
+    printf("这里设置过期:expireGenericCommand()\n");
     expireGenericCommand(c,mstime(),UNIT_SECONDS);
 }
 

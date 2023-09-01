@@ -745,21 +745,23 @@ void randomkeyCommand(client *c) {
  */
 void keysCommand(client *c) {
     printf("处理keys命令\n");
-    dictIterator *di;
-    dictEntry *de;
-    sds pattern = c->argv[1]->ptr;
+    dictIterator *di; // 这里是目录迭代器
+    dictEntry *de; // 目录实体
+    sds pattern = c->argv[1]->ptr; // sds的表达式
     int plen = sdslen(pattern), allkeys;
     unsigned long numkeys = 0;
     void *replylen = addReplyDeferredLen(c);
 
-    di = dictGetSafeIterator(c->db->dict);
+    di = dictGetSafeIterator(c->db->dict); // 获取目录表达式
     allkeys = (pattern[0] == '*' && plen == 1);
-    while((de = dictNext(di)) != NULL) {
-        sds key = dictGetKey(de);
+    while((de = dictNext(di)) != NULL) { // 是否有下一个
+        sds key = dictGetKey(de); // 获取key
         robj *keyobj;
 
         if (allkeys || stringmatchlen(pattern,plen,key,sdslen(key),0)) {
+            //创建一个key对象
             keyobj = createStringObject(key,sdslen(key));
+            //判断key是否过期
             if (!keyIsExpired(c->db,keyobj)) {
                 addReplyBulk(c,keyobj);
                 numkeys++;
@@ -1570,6 +1572,7 @@ long long getExpire(redisDb *db, robj *key) {
 
 /* Delete the specified expired key and propagate expire. */
 void deleteExpiredKeyAndPropagate(redisDb *db, robj *keyobj) {
+    printf("删除过期key：%s\n",keyobj->ptr);
     mstime_t expire_latency;
     latencyStartMonitor(expire_latency);
     if (server.lazyfree_lazy_expire)
@@ -1578,6 +1581,7 @@ void deleteExpiredKeyAndPropagate(redisDb *db, robj *keyobj) {
         dbSyncDelete(db,keyobj);
     latencyEndMonitor(expire_latency);
     latencyAddSampleIfNeeded("expire-del",expire_latency);
+    // 过期时间通知
     notifyKeyspaceEvent(NOTIFY_EXPIRED,"expired",keyobj,db->id);
     signalModifiedKey(NULL, db, keyobj);
     propagateDeletion(db,keyobj,server.lazyfree_lazy_expire);
@@ -1623,7 +1627,10 @@ void propagateDeletion(redisDb *db, robj *key, int lazy) {
 
 /* Check if the key is expired. */
 int keyIsExpired(redisDb *db, robj *key) {
+    printf("这里检查key是否过期：keyIsExpire（key：%s)\n",key->ptr);
+    //获取过期时间
     mstime_t when = getExpire(db,key);
+    //当前时间
     mstime_t now;
 
     if (when < 0) return 0; /* No expire for this key */
@@ -1637,6 +1644,7 @@ int keyIsExpired(redisDb *db, robj *key) {
      * script execution, making propagation to slaves / AOF consistent.
      * See issue #1525 on Github for more information. */
     if (server.script_caller) {
+        //获取过期时间
         now = scriptTimeSnapshot();
     }
     /* If we are in the middle of a command execution, we still want to use
@@ -1655,7 +1663,9 @@ int keyIsExpired(redisDb *db, robj *key) {
     }
 
     /* The key expired if the current (virtual or real) time is greater
-     * than the expire time of the key. */
+     * than the expire time of the key.
+     * 进行是否过期的判断
+     * */
     return now > when;
 }
 
@@ -1689,6 +1699,8 @@ int keyIsExpired(redisDb *db, robj *key) {
  * The return value of the function is 0 if the key is still valid,
  * otherwise the function returns 1 if the key is expired. */
 int expireIfNeeded(redisDb *db, robj *key, int flags) {
+    printf("expireIfNeeded：%s \n", key->ptr);
+    // key 没有过期
     if (!keyIsExpired(db,key)) return 0;
 
     /* If we are running in the context of a replica, instead of
@@ -1720,7 +1732,9 @@ int expireIfNeeded(redisDb *db, robj *key, int flags) {
      * have failed over and the new primary will send us the expire. */
     if (checkClientPauseTimeoutAndReturnIfPaused()) return 1;
 
-    /* Delete the key */
+    /* Delete the key
+     * 删除这个key
+     * */
     deleteExpiredKeyAndPropagate(db,key);
     return 1;
 }
