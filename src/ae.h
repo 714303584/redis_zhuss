@@ -60,6 +60,9 @@
 /* Macros */
 #define AE_NOTUSED(V) ((void) V)
 
+//这里是事件循环
+//已经知道的有定期删除任务执行
+
 struct aeEventLoop;
 
 /* Types and data structures */

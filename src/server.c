@@ -1028,6 +1028,7 @@ void databasesCron(void) {
      * as master will synthesize DELs for us. */
     if (server.active_expire_enabled) {
         if (iAmMaster()) {
+            //这里是过期循环 -- 进行key的定期释放
             activeExpireCycle(ACTIVE_EXPIRE_CYCLE_SLOW);
         } else {
             expireSlaveKeys();
@@ -1328,7 +1329,11 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     /* We need to do a few operations on clients asynchronously. */
     clientsCron();
 
-    /* Handle background operations on Redis databases. */
+    /* Handle background operations on Redis databases.
+     * 后台操作
+     * 定期过期方法执行
+     *  TODO 其他待看
+     * */
     databasesCron();
 
     /* Start a scheduled AOF rewrite if this was requested by the user while
@@ -2683,7 +2688,11 @@ void initServer(void) {
 
     /* Create the timer callback, this is our way to process many background
      * operations incrementally, like clients timeout, eviction of unaccessed
-     * expired keys and so forth. */
+     * expired keys and so forth.
+     * 创建一个定时器
+     * 这是处理很多后台的操作的方式
+     * 比如 客户端超时， key过期
+     * */
     if (aeCreateTimeEvent(server.el, 1, serverCron, NULL, NULL) == AE_ERR) {
         serverPanic("Can't create event loop timers.");
         exit(1);
